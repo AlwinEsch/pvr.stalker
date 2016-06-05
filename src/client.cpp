@@ -108,6 +108,7 @@ ADDON_STATUS ADDON_Create(void* callbacks, void* props)
 
   m_CurStatus     = ADDON_STATUS_UNKNOWN;
   m_data          = new SData;
+  PVR->RegisterAddonInstance(m_data);
   g_strUserPath   = pvrProps->strUserPath;
   g_strClientPath = pvrProps->strClientPath;
 
@@ -185,6 +186,7 @@ void ADDON_Destroy()
 
   if (m_data)
     SAFE_DELETE(m_data);
+  PVR->RegisterAddonInstance(nullptr);
 
   if (PVR)
     SAFE_DELETE(PVR);
@@ -223,45 +225,45 @@ void ADDON_FreeSettings()
  * PVR Client AddOn specific public library functions
  ***********************************************************/
 
-void OnSystemSleep()
+void OnSystemSleep(void* addonInstance)
 {
 }
 
-void OnSystemWake()
+void OnSystemWake(void* addonInstance)
 {
 }
 
-void OnPowerSavingActivated()
+void OnPowerSavingActivated(void* addonInstance)
 {
 }
 
-void OnPowerSavingDeactivated()
+void OnPowerSavingDeactivated(void* addonInstance)
 {
 }
 
-const char* GetPVRAPIVersion(void)
+const char* GetPVRAPIVersion(void* addonInstance)
 {
   static const char *strApiVersion = XBMC_PVR_API_VERSION;
   return strApiVersion;
 }
 
-const char* GetMininumPVRAPIVersion(void)
+const char* GetMininumPVRAPIVersion(void* addonInstance)
 {
   static const char *strMinApiVersion = XBMC_PVR_MIN_API_VERSION;
   return strMinApiVersion;
 }
 
-const char* GetGUIAPIVersion(void)
+const char* GetGUIAPIVersion(void* addonInstance)
 {
   return ""; // GUI API not used
 }
 
-const char* GetMininumGUIAPIVersion(void)
+const char* GetMininumGUIAPIVersion(void* addonInstance)
 {
   return ""; // GUI API not used
 }
 
-PVR_ERROR GetAddonCapabilities(PVR_ADDON_CAPABILITIES* pCapabilities)
+PVR_ERROR GetAddonCapabilities(void* addonInstance, PVR_ADDON_CAPABILITIES* pCapabilities)
 {
   pCapabilities->bSupportsEPG           = true;
   pCapabilities->bSupportsTV            = true;
@@ -270,154 +272,131 @@ PVR_ERROR GetAddonCapabilities(PVR_ADDON_CAPABILITIES* pCapabilities)
   return PVR_ERROR_NO_ERROR;
 }
 
-const char* GetBackendName(void)
+const char* GetBackendName(void* addonInstance)
 {
   static const char *strBackendName = "Stalker Middleware";
   return strBackendName;
 }
 
-const char* GetBackendVersion(void)
+const char* GetBackendVersion(void* addonInstance)
 {
   static const char *strBackendVersion = "Unknown";
   return strBackendVersion;
 }
 
-const char* GetConnectionString(void)
+const char* GetConnectionString(void* addonInstance)
 {
   static const char *strConnectionString = g_strServer.c_str();
   return strConnectionString;
 }
 
-const char* GetBackendHostname(void)
+const char* GetBackendHostname(void* addonInstance)
 {
   return "";
 }
 
-PVR_ERROR GetEPGForChannel(ADDON_HANDLE handle, const PVR_CHANNEL &channel, time_t iStart, time_t iEnd)
+PVR_ERROR GetEPGForChannel(void* addonInstance, ADDON_HANDLE handle, const PVR_CHANNEL &channel, time_t iStart, time_t iEnd)
 {
-  if (!m_data)
-    return PVR_ERROR_SERVER_ERROR;
-
-  return m_data->GetEPGForChannel(handle, channel, iStart, iEnd);
+  return static_cast<SData*>(addonInstance)->GetEPGForChannel(handle, channel, iStart, iEnd);
 }
 
-int GetChannelGroupsAmount(void)
+int GetChannelGroupsAmount(void* addonInstance)
 {
-  if (!m_data)
-    return -1;
-
-  return m_data->GetChannelGroupsAmount();
+  return static_cast<SData*>(addonInstance)->GetChannelGroupsAmount();
 }
 
-PVR_ERROR GetChannelGroups(ADDON_HANDLE handle, bool bRadio)
+PVR_ERROR GetChannelGroups(void* addonInstance, ADDON_HANDLE handle, bool bRadio)
 {
-  if (!m_data)
-    return PVR_ERROR_SERVER_ERROR;
-
-  return m_data->GetChannelGroups(handle, bRadio);
+  return static_cast<SData*>(addonInstance)->GetChannelGroups(handle, bRadio);
 }
 
-PVR_ERROR GetChannelGroupMembers(ADDON_HANDLE handle, const PVR_CHANNEL_GROUP &group)
+PVR_ERROR GetChannelGroupMembers(void* addonInstance, ADDON_HANDLE handle, const PVR_CHANNEL_GROUP &group)
 {
-  if (!m_data)
-    return PVR_ERROR_SERVER_ERROR;
-
-  return m_data->GetChannelGroupMembers(handle, group);
+  return static_cast<SData*>(addonInstance)->GetChannelGroupMembers(handle, group);
 }
 
-int GetChannelsAmount(void)
+int GetChannelsAmount(void* addonInstance)
 {
-  if (!m_data)
-    return 0;
-
-  return m_data->GetChannelsAmount();
+  return static_cast<SData*>(addonInstance)->GetChannelsAmount();
 }
 
-PVR_ERROR GetChannels(ADDON_HANDLE handle, bool bRadio)
+PVR_ERROR GetChannels(void* addonInstance, ADDON_HANDLE handle, bool bRadio)
 {
-  if (!m_data)
-    return PVR_ERROR_SERVER_ERROR;
-
-  return m_data->GetChannels(handle, bRadio);
+  return static_cast<SData*>(addonInstance)->GetChannels(handle, bRadio);
 }
 
-const char* GetLiveStreamURL(const PVR_CHANNEL& channel)
+const char* GetLiveStreamURL(void* addonInstance, const PVR_CHANNEL& channel)
 {
-  const char* url = "";
-
-  if (m_data)
-    url = m_data->GetChannelStreamURL(channel);
-
-  return url;
+  return static_cast<SData*>(addonInstance)->GetChannelStreamURL(channel);
 }
 
-unsigned int GetChannelSwitchDelay(void)
+unsigned int GetChannelSwitchDelay(void* addonInstance)
 {
   return 0;
 }
 
-bool CanPauseStream(void)
+bool CanPauseStream(void* addonInstance)
 {
   return true;
 }
 
-bool CanSeekStream(void)
+bool CanSeekStream(void* addonInstance)
 {
   return true;
 }
 
 /** UNUSED API FUNCTIONS */
-PVR_ERROR GetDriveSpace(long long *iTotal, long long *iUsed) { return PVR_ERROR_NOT_IMPLEMENTED; }
-PVR_ERROR CallMenuHook(const PVR_MENUHOOK &menuhook, const PVR_MENUHOOK_DATA &item) { return PVR_ERROR_NOT_IMPLEMENTED; }
-PVR_ERROR OpenDialogChannelScan(void) { return PVR_ERROR_NOT_IMPLEMENTED; }
-PVR_ERROR DeleteChannel(const PVR_CHANNEL &channel) { return PVR_ERROR_NOT_IMPLEMENTED; }
-PVR_ERROR RenameChannel(const PVR_CHANNEL &channel) { return PVR_ERROR_NOT_IMPLEMENTED; }
-PVR_ERROR MoveChannel(const PVR_CHANNEL &channel) { return PVR_ERROR_NOT_IMPLEMENTED; }
-PVR_ERROR OpenDialogChannelSettings(const PVR_CHANNEL &channel) { return PVR_ERROR_NOT_IMPLEMENTED; }
-PVR_ERROR OpenDialogChannelAdd(const PVR_CHANNEL &channel) { return PVR_ERROR_NOT_IMPLEMENTED; }
-int GetRecordingsAmount(bool deleted) { return PVR_ERROR_NOT_IMPLEMENTED; }
-PVR_ERROR GetRecordings(ADDON_HANDLE handle, bool deleted) { return PVR_ERROR_NOT_IMPLEMENTED; }
-PVR_ERROR DeleteRecording(const PVR_RECORDING &recording) { return PVR_ERROR_NOT_IMPLEMENTED; }
-PVR_ERROR UndeleteRecording(const PVR_RECORDING& recording) { return PVR_ERROR_NOT_IMPLEMENTED; }
-PVR_ERROR DeleteAllRecordingsFromTrash() { return PVR_ERROR_NOT_IMPLEMENTED; }
-PVR_ERROR RenameRecording(const PVR_RECORDING &recording) { return PVR_ERROR_NOT_IMPLEMENTED; }
-PVR_ERROR SetRecordingPlayCount(const PVR_RECORDING &recording, int count) { return PVR_ERROR_NOT_IMPLEMENTED; }
-PVR_ERROR SetRecordingLastPlayedPosition(const PVR_RECORDING &recording, int lastplayedposition) { return PVR_ERROR_NOT_IMPLEMENTED; }
-int GetRecordingLastPlayedPosition(const PVR_RECORDING &recording) { return -1; }
-PVR_ERROR GetRecordingEdl(const PVR_RECORDING&, PVR_EDL_ENTRY edl[], int *size) { return PVR_ERROR_NOT_IMPLEMENTED; }
-int GetTimersAmount(void) { return -1; }
-PVR_ERROR GetTimers(ADDON_HANDLE handle) { return PVR_ERROR_NOT_IMPLEMENTED; }
-PVR_ERROR GetTimerTypes(PVR_TIMER_TYPE types[], int *size) { return PVR_ERROR_NOT_IMPLEMENTED; }
-PVR_ERROR AddTimer(const PVR_TIMER &timer) { return PVR_ERROR_NOT_IMPLEMENTED; }
-PVR_ERROR DeleteTimer(const PVR_TIMER &timer, bool bForceDelete) { return PVR_ERROR_NOT_IMPLEMENTED; }
-PVR_ERROR UpdateTimer(const PVR_TIMER &timer) { return PVR_ERROR_NOT_IMPLEMENTED; }
-bool OpenLiveStream(const PVR_CHANNEL &channel) { return false; }
-void CloseLiveStream(void) {}
-int ReadLiveStream(unsigned char *pBuffer, unsigned int iBufferSize) { return -1; }
-long long SeekLiveStream(long long iPosition, int iWhence /* = SEEK_SET */) { return -1; }
-long long PositionLiveStream(void) { return -1; }
-long long LengthLiveStream(void) { return -1; }
-bool SwitchChannel(const PVR_CHANNEL& channel) { return false; }
-PVR_ERROR SignalStatus(PVR_SIGNAL_STATUS &signalStatus) { return PVR_ERROR_NOT_IMPLEMENTED; }
-PVR_ERROR GetStreamProperties(PVR_STREAM_PROPERTIES* pProperties) { return PVR_ERROR_NOT_IMPLEMENTED; }
-bool OpenRecordedStream(const PVR_RECORDING &recording) { return false; }
-void CloseRecordedStream(void) {}
-int ReadRecordedStream(unsigned char *pBuffer, unsigned int iBufferSize) { return -1; }
-long long SeekRecordedStream(long long iPosition, int iWhence /* = SEEK_SET */) { return -1; }
-long long PositionRecordedStream(void) { return -1; }
-long long LengthRecordedStream(void) { return -1; }
-void DemuxReset(void) {}
-void DemuxAbort(void) {}
-void DemuxFlush(void) {}
-DemuxPacket* DemuxRead(void) { return NULL; }
-void PauseStream(bool bPaused) {}
-bool SeekTime(int time, bool backwards, double *startpts) { return false; }
-void SetSpeed(int speed) {}
-bool IsTimeshifting(void) { return false; }
-bool IsRealTimeStream(void) { return true; }
-time_t GetPlayingTime() { return 0; }
-time_t GetBufferTimeStart() { return 0; }
-time_t GetBufferTimeEnd() { return 0; }
-PVR_ERROR SetEPGTimeFrame(int) { return PVR_ERROR_NOT_IMPLEMENTED; }
+PVR_ERROR GetDriveSpace(void* addonInstance, long long *iTotal, long long *iUsed) { return PVR_ERROR_NOT_IMPLEMENTED; }
+PVR_ERROR CallMenuHook(void* addonInstance, const PVR_MENUHOOK &menuhook, const PVR_MENUHOOK_DATA &item) { return PVR_ERROR_NOT_IMPLEMENTED; }
+PVR_ERROR OpenDialogChannelScan(void* addonInstance) { return PVR_ERROR_NOT_IMPLEMENTED; }
+PVR_ERROR DeleteChannel(void* addonInstance, const PVR_CHANNEL &channel) { return PVR_ERROR_NOT_IMPLEMENTED; }
+PVR_ERROR RenameChannel(void* addonInstance, const PVR_CHANNEL &channel) { return PVR_ERROR_NOT_IMPLEMENTED; }
+PVR_ERROR MoveChannel(void* addonInstance, const PVR_CHANNEL &channel) { return PVR_ERROR_NOT_IMPLEMENTED; }
+PVR_ERROR OpenDialogChannelSettings(void* addonInstance, const PVR_CHANNEL &channel) { return PVR_ERROR_NOT_IMPLEMENTED; }
+PVR_ERROR OpenDialogChannelAdd(void* addonInstance, const PVR_CHANNEL &channel) { return PVR_ERROR_NOT_IMPLEMENTED; }
+int GetRecordingsAmount(void* addonInstance, bool deleted) { return PVR_ERROR_NOT_IMPLEMENTED; }
+PVR_ERROR GetRecordings(void* addonInstance, ADDON_HANDLE handle, bool deleted) { return PVR_ERROR_NOT_IMPLEMENTED; }
+PVR_ERROR DeleteRecording(void* addonInstance, const PVR_RECORDING &recording) { return PVR_ERROR_NOT_IMPLEMENTED; }
+PVR_ERROR UndeleteRecording(void* addonInstance, const PVR_RECORDING& recording) { return PVR_ERROR_NOT_IMPLEMENTED; }
+PVR_ERROR DeleteAllRecordingsFromTrash(void* addonInstance) { return PVR_ERROR_NOT_IMPLEMENTED; }
+PVR_ERROR RenameRecording(void* addonInstance, const PVR_RECORDING &recording) { return PVR_ERROR_NOT_IMPLEMENTED; }
+PVR_ERROR SetRecordingPlayCount(void* addonInstance, const PVR_RECORDING &recording, int count) { return PVR_ERROR_NOT_IMPLEMENTED; }
+PVR_ERROR SetRecordingLastPlayedPosition(void* addonInstance, const PVR_RECORDING &recording, int lastplayedposition) { return PVR_ERROR_NOT_IMPLEMENTED; }
+int GetRecordingLastPlayedPosition(void* addonInstance, const PVR_RECORDING &recording) { return -1; }
+PVR_ERROR GetRecordingEdl(void* addonInstance, const PVR_RECORDING&, PVR_EDL_ENTRY edl[], int *size) { return PVR_ERROR_NOT_IMPLEMENTED; }
+int GetTimersAmount(void* addonInstance) { return -1; }
+PVR_ERROR GetTimers(void* addonInstance, ADDON_HANDLE handle) { return PVR_ERROR_NOT_IMPLEMENTED; }
+PVR_ERROR GetTimerTypes(void* addonInstance, PVR_TIMER_TYPE types[], int *size) { return PVR_ERROR_NOT_IMPLEMENTED; }
+PVR_ERROR AddTimer(void* addonInstance, const PVR_TIMER &timer) { return PVR_ERROR_NOT_IMPLEMENTED; }
+PVR_ERROR DeleteTimer(void* addonInstance, const PVR_TIMER &timer, bool bForceDelete) { return PVR_ERROR_NOT_IMPLEMENTED; }
+PVR_ERROR UpdateTimer(void* addonInstance, const PVR_TIMER &timer) { return PVR_ERROR_NOT_IMPLEMENTED; }
+bool OpenLiveStream(void* addonInstance, const PVR_CHANNEL &channel) { return false; }
+void CloseLiveStream(void* addonInstance) {}
+int ReadLiveStream(void* addonInstance, unsigned char *pBuffer, unsigned int iBufferSize) { return -1; }
+long long SeekLiveStream(void* addonInstance, long long iPosition, int iWhence /* = SEEK_SET */) { return -1; }
+long long PositionLiveStream(void* addonInstance) { return -1; }
+long long LengthLiveStream(void* addonInstance) { return -1; }
+bool SwitchChannel(void* addonInstance, const PVR_CHANNEL& channel) { return false; }
+PVR_ERROR SignalStatus(void* addonInstance, PVR_SIGNAL_STATUS &signalStatus) { return PVR_ERROR_NOT_IMPLEMENTED; }
+PVR_ERROR GetStreamProperties(void* addonInstance, PVR_STREAM_PROPERTIES* pProperties) { return PVR_ERROR_NOT_IMPLEMENTED; }
+bool OpenRecordedStream(void* addonInstance, const PVR_RECORDING &recording) { return false; }
+void CloseRecordedStream(void* addonInstance) {}
+int ReadRecordedStream(void* addonInstance, unsigned char *pBuffer, unsigned int iBufferSize) { return -1; }
+long long SeekRecordedStream(void* addonInstance, long long iPosition, int iWhence /* = SEEK_SET */) { return -1; }
+long long PositionRecordedStream(void* addonInstance) { return -1; }
+long long LengthRecordedStream(void* addonInstance) { return -1; }
+void DemuxReset(void* addonInstance) {}
+void DemuxAbort(void* addonInstance) {}
+void DemuxFlush(void* addonInstance) {}
+DemuxPacket* DemuxRead(void* addonInstance) { return NULL; }
+void PauseStream(void* addonInstance, bool bPaused) {}
+bool SeekTime(void* addonInstance, int time, bool backwards, double *startpts) { return false; }
+void SetSpeed(void* addonInstance, int speed) {}
+bool IsTimeshifting(void* addonInstance) { return false; }
+bool IsRealTimeStream(void* addonInstance) { return true; }
+time_t GetPlayingTime(void* addonInstance) { return 0; }
+time_t GetBufferTimeStart(void* addonInstance) { return 0; }
+time_t GetBufferTimeEnd(void* addonInstance) { return 0; }
+PVR_ERROR SetEPGTimeFrame(void* addonInstance, int) { return PVR_ERROR_NOT_IMPLEMENTED; }
 
 }
